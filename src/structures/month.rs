@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 use serde::{Serialize, Deserialize};
+use std::fs;
 
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
@@ -23,6 +24,17 @@ impl FMonth {
         }
     }
 
+    pub fn from_json(path_file: &str) -> Self {
+        let data_str: String = match fs::read_to_string(path_file) {
+            Ok(data) => data,
+            Err(_error) => {
+                println!("Couldn't read from {path_file} ... and empty object will be initialized");
+                return Self::new();
+            }
+        };
+        let month: Self = serde_json::from_str(&data_str).expect("{data_str} must be a valid json string!!");
+        month
+    }
 
     pub fn keys(&self) -> [&str; 4] {
         ["fix", "food", "freetime", "savings"]
@@ -49,45 +61,6 @@ impl FMonth {
             _ => { println!("invalid command") }
         }
     }
-    // pub fn extend_fix(&mut self, value: HashMap<String, f64>) {
-    //     self.add_to_total(&value);
-    //     self.fix.extend(value);
-    // }
-    //
-    // pub fn insert_fix(&mut self, key: String, value: f64) {
-    //     self.fix.insert(key.clone(), value);
-    //     self.add_to_total(&HashMap::from([(key, value)]));
-    // }
-    //
-    // pub fn extend_food(&mut self, value: HashMap<String, f64>) {
-    //     self.add_to_total(&value);
-    //     self.fix.extend(value);
-    // }
-    //
-    // pub fn insert_food(&mut self, key: String, value: f64) {
-    //     self.fix.insert(key.clone(), value);
-    //     self.add_to_total(&HashMap::from([(key, value)]));
-    // }
-    //
-    // pub fn extend_free_time(&mut self, value: HashMap<String, f64>) {
-    //     self.add_to_total(&value);
-    //     self.fix.extend(value);
-    // }
-    //
-    // pub fn insert_free_time(&mut self, key: String, value: f64) {
-    //     self.fix.insert(key.clone(), value);
-    //     self.add_to_total(&HashMap::from([(key, value)]));
-    // }
-    //
-    // pub fn extend_savings(&mut self, value: HashMap<String, f64>) {
-    //     self.add_to_total(&value);
-    //     self.fix.extend(value);
-    // }
-    //
-    // pub fn insert_savings(&mut self, key: String, value: f64) {
-    //     self.fix.insert(key.clone(), value);
-    //     self.add_to_total(&HashMap::from([(key, value)]));
-    // }
 
     fn add_to_total(&mut self, to_add: &HashMap<String, f64>) {
         for v in to_add.values() {
