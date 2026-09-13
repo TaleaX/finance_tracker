@@ -1,12 +1,8 @@
 use crate::shutdown::shutdown;
 use crate::parser::parse_input;
 use std::fs;
-// use std::io;
-use std::io::Write;
 use crate::structures::month::FMonth;
-// use crate::input::get_inp;
 use crate::cli::input::{print_options, get_inp, InputOptions};
-// use crate::cli::input::get_inp;
 use LoopOperation::*;
 
 #[derive(PartialEq, Debug, Copy, Clone)]
