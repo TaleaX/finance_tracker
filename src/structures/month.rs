@@ -1,7 +1,6 @@
 use std::collections::HashMap;
 use serde::{Serialize, Deserialize};
 use std::fs;
-use std::collections::hash_map::Entry;
 use crate::cli::command::CmdType;
 
 
@@ -54,25 +53,13 @@ impl FMonth {
     }
 
     pub fn insert(&mut self, category: &str, key: String, value: f64) {
-        let diff: f64 = match category {
-                            "fix" => {
-                                match self.fix.entry(key) {
-                                        Entry::Occupied(entry) => {
-                                            println!("{} fixed entry already exists\n \
-                                                Since its a fixed entry you cannot add to it, \
-                                                to change it please use the 'update' command instead", entry.get());
-                                            0.0
-                                        }
-
-                                        Entry::Vacant(entry) => { entry.insert(value); value }
-                                }
-                            }
-                            "food" => { self.food.entry(key).and_modify(|elem| *elem += value).or_insert(value); value }
-                            "freetime" => { self.freetime.entry(key).and_modify(|elem| *elem += value).or_insert(value); value }
-                            "savings" => {  self.savings.entry(key).and_modify(|elem| *elem += value).or_insert(value); value }
-                            _ => { println!("invalid command"); 0.0 }
-                        };
-        self.total += diff;
+        match category {
+            "fix" => { self.total += insert_entry(&mut self.fix, key, value); }
+            "food" => { self.total += insert_entry(&mut self.food, key, value); }
+            "freetime" => { self.total += insert_entry(&mut self.freetime, key, value); }
+            "savings" => { self.total += insert_entry(&mut self.savings, key, value); }
+            _ => { println!("invalid command"); }
+        };
     }
 
     pub fn delete(&mut self, category: &str, key: String) {
@@ -105,6 +92,16 @@ impl FMonth {
         }
     }
 
+}
+
+fn insert_entry(map: &mut HashMap<String, f64>, key: String, value: f64) -> f64 {
+    if map.get_mut(&key).is_none() {
+        map.insert(key, value);
+    } else {
+        println!("Key: {key} already exists!");
+        return 0.0;
+    }
+    value
 }
 
 fn modify_entry(map: &mut HashMap<String, f64>, key: String, value: f64, operation: CmdType) -> f64 {
