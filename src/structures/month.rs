@@ -1,6 +1,9 @@
 use std::collections::HashMap;
 use serde::{Serialize, Deserialize};
 use std::fs;
+use std::collections::hash_map::Entry;
+use crate::command::CmdType;
+
 
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
@@ -40,32 +43,91 @@ impl FMonth {
         ["fix", "food", "freetime", "savings"]
     }
 
-    // pub fn extend(&mut self, what: &str, value: HashMap<String, f64>) {
-    //     self.add_to_total(&value);
-    //     match what {
-    //         "fix" => { self.fix.extend(value); }
-    //         "food" => { self.food.extend(value); }
-    //         "freetime" => { self.freetime.extend(value); }
-    //         "savings" => {  self.savings.extend(value); }
-    //         _ => { println!("invalid command") }
-    //     }
-    // }
-
-    pub fn insert(&mut self, what: &str, key: String, value: f64) {
-        self.add_to_total(&HashMap::from([(key.clone(), value)]));
+    pub fn update(&mut self, what: &str, key: String, value: f64) {
         match what {
-            "fix" => { self.fix.entry(key).and_modify(|elem| *elem += value).or_insert(value); }
-            "food" => { self.food.entry(key).and_modify(|elem| *elem += value).or_insert(value); }
-            "freetime" => { self.freetime.entry(key).and_modify(|elem| *elem += value).or_insert(value); }
-            "savings" => {  self.savings.entry(key).and_modify(|elem| *elem += value).or_insert(value); }
-            _ => { println!("invalid command") }
+            "fix" => { self.total += modify_entry(&mut self.fix, key, value, CmdType::UPDATE); }
+            "food" => { self.total += modify_entry(&mut self.food, key, value, CmdType::UPDATE);}
+            "freetime" => { self.total += modify_entry(&mut self.freetime, key, value, CmdType::UPDATE); }
+            "savings" => {  self.total += modify_entry(&mut self.savings, key, value, CmdType::UPDATE); }
+            _ => { println!("invalid key") }
         }
     }
 
-    fn add_to_total(&mut self, to_add: &HashMap<String, f64>) {
-        for v in to_add.values() {
-            self.total += v;
+    pub fn insert(&mut self, category: &str, key: String, value: f64) {
+        let diff: f64 = match category {
+                            "fix" => {
+                                match self.fix.entry(key) {
+                                        Entry::Occupied(entry) => {
+                                            println!("{} fixed entry already exists\n \
+                                                Since its a fixed entry you cannot add to it, \
+                                                to change it please use the 'update' command instead", entry.get());
+                                            0.0
+                                        }
+
+                                        Entry::Vacant(entry) => { entry.insert(value); value }
+                                }
+                            }
+                            "food" => { self.food.entry(key).and_modify(|elem| *elem += value).or_insert(value); value }
+                            "freetime" => { self.freetime.entry(key).and_modify(|elem| *elem += value).or_insert(value); value }
+                            "savings" => {  self.savings.entry(key).and_modify(|elem| *elem += value).or_insert(value); value }
+                            _ => { println!("invalid command"); 0.0 }
+                        };
+        self.total += diff;
+    }
+
+    pub fn delete(&mut self, category: &str, key: String) {
+        match category {
+            "fix" => { self.fix.remove(&key); }
+            "food" => { self.food.remove(&key); }
+            "freetime" => { self.freetime.remove(&key); }
+            "savings" => {  self.savings.remove(&key); }
+            _ => { println!("invalid command"); }
+        }
+    }
+
+    pub fn add(&mut self, category: &str, key: String, value: f64) {
+        match category {
+            "fix" => { self.total += modify_entry(&mut self.fix, key, value, CmdType::ADD); }
+            "food" => { self.total += modify_entry(&mut self.food, key, value, CmdType::ADD); }
+            "freetime" => { self.total += modify_entry(&mut self.freetime, key, value, CmdType::ADD); }
+            "savings" => { self.total += modify_entry(&mut self.savings, key, value, CmdType::ADD); }
+            _ => { println!("invalid command"); }
+        }
+    }
+
+    pub fn sub(&mut self, category: &str, key: String, value: f64) {
+        match category {
+            "fix" => { self.total += modify_entry(&mut self.fix, key, value, CmdType::SUB); }
+            "food" => { self.total += modify_entry(&mut self.food, key, value, CmdType::SUB); }
+            "freetime" => { self.total += modify_entry(&mut self.freetime, key, value, CmdType::SUB); }
+            "savings" => { self.total += modify_entry(&mut self.savings, key, value, CmdType::SUB); }
+            _ => { println!("invalid command"); }
         }
     }
 
 }
+
+
+fn get_diff (attr: Option<&f64>, new_val: f64) -> f64 {
+    let old_val: f64 = match attr {
+        Some(attr) => *attr,
+        None => 0.0
+    };
+    new_val - old_val
+}
+
+
+fn modify_entry(map: &mut HashMap<String, f64>, key: String, value: f64, operation: CmdType) -> f64 {
+    if let Some(mvalue) = map.get_mut(&key) {
+        let tmp: f64 = *mvalue;
+        if operation == CmdType::ADD { *mvalue += value; }
+        else if operation == CmdType::SUB { *mvalue -= value; }
+        else if operation == CmdType::UPDATE { *mvalue = value; }
+        else { println!("Operations: {:?} doesn't exist!", operation); }
+        return *mvalue - tmp;
+    } else {
+        println!("{:?} doesn't exist!\nInsert it first!", key);
+    }
+    0.0
+}
+
