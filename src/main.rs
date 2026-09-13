@@ -1,14 +1,14 @@
-use std::io;
 mod structures;
 mod parser;
-mod command;
+mod cli;
 mod shutdown;
 
 
 use structures::month::FMonth;
 // use std::env;
 use chrono::Datelike;
-use command::exec_cmd;
+use cli::command::exec_cmd;
+use cli::input::{get_inp, print_options, InputOptions};
 
 
 // fn is_directory_empty(directory: &str) -> std::io::Result<bool> {
@@ -30,11 +30,8 @@ fn main() {
     let mut month = FMonth::from_json(&path_db);
     let cmds = ["view", "update", "insert", "add", "sub" ,"exit"];
     loop {
-        println!("Enter Command: {:?}", cmds);
-        inp.clear();
-        io::stdin()
-            .read_line(&mut inp)
-            .expect("Failed to read line");
+        print_options(&mut month, InputOptions::Main);
+        get_inp(&mut inp);
         let _ = exec_cmd(inp.trim(), &mut month, &path_db);
     }
 }

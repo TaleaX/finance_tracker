@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use serde::{Serialize, Deserialize};
 use std::fs;
 use std::collections::hash_map::Entry;
-use crate::command::CmdType;
+use crate::cli::command::CmdType;
 
 
 #[derive(Serialize, Deserialize, Debug)]
