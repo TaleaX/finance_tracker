@@ -4,8 +4,9 @@ mod cli;
 mod shutdown;
 
 
+use std::collections::HashMap;
 use structures::month::FMonth;
-// use std::env;
+use std::env;
 use chrono::Datelike;
 use cli::command::exec_cmd;
 use cli::input::{get_inp, print_options, InputOptions};
@@ -24,11 +25,14 @@ fn main() {
     // println!("{}", current_date.month());
     // if args.len() <= 1 { shutdown(0); }
     // let path_db: String = args[1].trim().to_string();
-    let path_db = format!("/home/tdehne/projects/self/rust/finance_tracker_db/2026/{}.json", current_date.month());
+    let env_vars: HashMap<String, String> = env::vars().collect();
+    let mut path_db: String = format!("{}.json", current_date.month());
+    if let Some(val) = env_vars.get("FTRACKER_DB") {
+        path_db = format!("{}/{}.json", val, current_date.month());
+    }
 
     let mut inp = String::new();
     let mut month = FMonth::from_json(&path_db);
-    let cmds = ["view", "update", "insert", "add", "sub" ,"exit"];
     loop {
         print_options(&mut month, InputOptions::Main);
         get_inp(&mut inp);
