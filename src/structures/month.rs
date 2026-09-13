@@ -108,22 +108,24 @@ impl FMonth {
 }
 
 
-fn get_diff (attr: Option<&f64>, new_val: f64) -> f64 {
-    let old_val: f64 = match attr {
-        Some(attr) => *attr,
-        None => 0.0
-    };
-    new_val - old_val
-}
+// fn get_diff (attr: Option<&f64>, new_val: f64) -> f64 {
+//     let old_val: f64 = match attr {
+//         Some(attr) => *attr,
+//         None => 0.0
+//     };
+//     new_val - old_val
+// }
 
 
 fn modify_entry(map: &mut HashMap<String, f64>, key: String, value: f64, operation: CmdType) -> f64 {
     if let Some(mvalue) = map.get_mut(&key) {
         let tmp: f64 = *mvalue;
-        if operation == CmdType::ADD { *mvalue += value; }
-        else if operation == CmdType::SUB { *mvalue -= value; }
-        else if operation == CmdType::UPDATE { *mvalue = value; }
-        else { println!("Operations: {:?} doesn't exist!", operation); }
+        match operation {
+            CmdType::ADD => { *mvalue += value; }
+            CmdType::SUB => { *mvalue -= value; }
+            CmdType::UPDATE => { *mvalue = value; }
+            _ => { println!("Operations: {:?} doesn't exist!", operation) }
+        }
         return *mvalue - tmp;
     } else {
         println!("{:?} doesn't exist!\nInsert it first!", key);

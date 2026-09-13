@@ -16,9 +16,6 @@ use command::exec_cmd;
 //     Ok(entries.next().is_none())
 // }
 
-// fn read_json(path_file: &str) -> Result<String, std::io::Error> {
-//     Ok(fs::read_to_string(path_file)?)
-// }
 
 fn main() {
     // let args: Vec<String> = env::args().collect();
@@ -30,7 +27,7 @@ fn main() {
     let path_db = format!("/home/tdehne/projects/self/rust/finance_tracker_db/2026/{}.json", current_date.month());
 
     let mut inp = String::new();
-    let mut month = FMonth::from_json(&path_db);//FMonth::new();
+    let mut month = FMonth::from_json(&path_db);
     let cmds = ["view", "update", "insert", "add", "sub" ,"exit"];
     loop {
         println!("Enter Command: {:?}", cmds);
@@ -38,12 +35,7 @@ fn main() {
         io::stdin()
             .read_line(&mut inp)
             .expect("Failed to read line");
-        let cmd: &str = inp.trim();
-        if cmds.contains(&cmd) {
-            let _ = exec_cmd(&cmd, &mut month, &path_db);
-        } else {
-            println!("invalid command");
-        }
+        let _ = exec_cmd(inp.trim(), &mut month, &path_db);
     }
 }
 
